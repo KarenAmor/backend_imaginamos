@@ -13,10 +13,19 @@ import { PassportModule } from '@nestjs/passport';
         transport: Transport.TCP,
         options: { host: 'localhost', port: 3001 },
       },
+      {
+        name: 'INVENTORY_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3002,
+          timeout: 5000, // 5 segundos de timeout
+        },
+      }
     ]),
     PassportModule,
   ],
   controllers: [GatewayController],
   providers: [GatewayService, JwtStrategy],
 })
-export class GatewayModule {}
+export class GatewayModule { }
