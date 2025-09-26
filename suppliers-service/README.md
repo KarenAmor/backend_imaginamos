@@ -1,98 +1,132 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Documentación de la API del Servicio de Proveedores (Suppliers Service)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este documento proporciona una visión general del Servicio de Proveedores para la aplicación basada en microservicios. Describe la estructura de la tabla `suppliers`, las políticas de Seguridad a Nivel de Fila (RLS) y las operaciones disponibles para la gestión de proveedores.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tabla de Contenidos
 
-## Description
+* [Visión General](#visión-general)
+* [Estructura de la Tabla Suppliers](#estructura-de-la-tabla-suppliers)
+* [Políticas de Seguridad a Nivel de Fila (RLS)](#políticas-de-seguridad-a-nivel-de-fila-rls)
+* [Operaciones del Servicio](#operaciones-del-servicio)
+* [Manejo de Errores](#manejo-de-errores)
+* [Notas de Desarrollo](#notas-de-desarrollo)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Visión General
 
-## Project setup
+El Servicio de Proveedores es un microservicio basado en NestJS encargado de gestionar la información de los proveedores. Permite crear, consultar, actualizar y eliminar proveedores en la base de datos Supabase.
 
-```bash
-$ npm install
+## Estructura de la Tabla Suppliers
+
+La tabla `suppliers` almacena información de los proveedores:
+
+| Columna         | Tipo         | Descripción                       | Restricciones                |
+| --------------- | ------------ | --------------------------------- | ---------------------------- |
+| `id`            | SERIAL       | Identificador único del proveedor | Clave primaria               |
+| `name`          | VARCHAR(100) | Nombre del proveedor              | No nulo                      |
+| `contact_name`  | VARCHAR(100) | Nombre de contacto del proveedor  | Puede ser nulo               |
+| `contact_email` | VARCHAR(255) | Correo electrónico de contacto    | Puede ser nulo               |
+| `contact_phone` | VARCHAR(20)  | Teléfono de contacto              | Puede ser nulo               |
+| `address`       | TEXT         | Dirección del proveedor           | Puede ser nulo               |
+| `created_at`    | TIMESTAMP    | Fecha de creación                 | Default: CURRENT_TIMESTAMP   |
+| `updated_at`    | TIMESTAMP    | Fecha de última actualización     | Default: CURRENT_TIMESTAMP   |
+| `service_id`    | VARCHAR(50)  | Identificador del servicio        | Default: 'suppliers_service' |
+
+### Notas
+
+* `service_id` asegura que solo este servicio gestione los datos de proveedores.
+
+## Políticas de Seguridad a Nivel de Fila (RLS)
+
+RLS está habilitada en la tabla `suppliers` para restringir el acceso al servicio de proveedores:
+
+* **Políticas Principales**:
+
+```sql
+-- Para SELECT
+CREATE POLICY "Suppliers service can read suppliers" ON suppliers
+  FOR SELECT
+  TO authenticated
+  USING (service_id = 'suppliers_service');
+
+-- Para INSERT
+CREATE POLICY "Suppliers service can insert suppliers" ON suppliers
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (service_id = 'suppliers_service');
+
+-- Para UPDATE
+CREATE POLICY "Suppliers service can update suppliers" ON suppliers
+  FOR UPDATE
+  TO authenticated
+  USING (service_id = 'suppliers_service')
+  WITH CHECK (service_id = 'suppliers_service');
+
+-- Para DELETE
+CREATE POLICY "Suppliers service can delete suppliers" ON suppliers
+  FOR DELETE
+  TO authenticated
+  USING (service_id = 'suppliers_service');
 ```
 
-## Compile and run the project
+* **Propósito**: Permite solo al `Suppliers Service` (con `service_id = 'suppliers_service'`) realizar operaciones sobre proveedores. La clave de servicio de Supabase puede bypassar RLS si es necesario, pero las políticas aseguran integridad y aislamiento del microservicio.
 
-```bash
-# development
-$ npm run start
+## Operaciones del Servicio
 
-# watch mode
-$ npm run start:dev
+### Crear Proveedor
 
-# production mode
-$ npm run start:prod
+* **Entrada:** `name`, `contactName`, `contactEmail`, `contactPhone`, `address`.
+* **Proceso:** Inserta un nuevo proveedor en la tabla `suppliers`.
+* **Salida:** Datos del proveedor creado.
+
+### Consultar Proveedor
+
+* **Entrada:** `id` del proveedor.
+* **Salida:** Datos del proveedor o mensaje de error si no se encuentra.
+
+### Consultar Todos los Proveedores
+
+* **Salida:** Lista completa de proveedores almacenados.
+
+### Actualizar Proveedor
+
+* **Entrada:** `id` del proveedor y campos a actualizar (`name`, `contactName`, `contactEmail`, `contactPhone`, `address`).
+* **Salida:** Proveedor actualizado o mensaje de error si no se encuentra.
+
+### Eliminar Proveedor
+
+* **Entrada:** `id` del proveedor.
+* **Salida:** Mensaje de éxito o error si no se encuentra.
+
+## Manejo de Errores
+
+* Si falla alguna operación, se devuelve un mensaje descriptivo con `success: false`.
+* Ejemplo de respuesta cuando no se encuentra un proveedor:
+
+```json
+{
+  "success": false,
+  "message": "Supplier with id 123 not found"
+}
 ```
 
-## Run tests
+## Notas de Desarrollo
 
-```bash
-# unit tests
-$ npm run test
+* **Requisitos Previos:** Node.js, CLI de NestJS, CLI de Supabase y dependencias (`@supabase/supabase-js`).
+* **Configuración:**
 
-# e2e tests
-$ npm run test:e2e
+  1. Instalar dependencias: `npm install`
+  2. Configurar `.env` con `SUPABASE_URL` y `SUPABASE_KEY`.
+  3. Iniciar el servicio: `npm run start:dev`
+* **Pruebas:** Usar Postman para probar los endpoints con payloads JSON, por ejemplo:
 
-# test coverage
-$ npm run test:cov
+```json
+{
+  "name": "Proveedor ABC",
+  "contactName": "Juan Pérez",
+  "contactEmail": "juan@example.com",
+  "contactPhone": "3001234567",
+  "address": "Calle 123, Bogotá"
+}
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+* **Depuración:** Los logs muestran la información de las operaciones realizadas en la base de datos y posibles errores.

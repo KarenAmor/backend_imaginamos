@@ -1,6 +1,6 @@
 # Documentación de la API Gateway
 
-Este documento proporciona una visión general de la API Gateway para la aplicación basada en microservicios. Detalla su propósito, estructura, configuración, manejo de rutas, integración con microservicios (como el Auth Service), manejo de excepciones y notas de desarrollo.
+Este documento proporciona una visión general de la API Gateway para la aplicación basada en microservicios. Detalla su propósito, estructura, configuración, manejo de rutas, integración con microservicios como el Auth Service, Inventory Service, Customers Service, Suppliers Service y Billing Service, manejo de excepciones y notas de desarrollo.
 
 ## Tabla de Contenidos
 - [Visión General](#visión-general)

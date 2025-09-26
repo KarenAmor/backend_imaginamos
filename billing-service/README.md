@@ -1,98 +1,147 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Documentación de la API del Servicio de Facturación (Billing Service)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este documento proporciona una visión general del Servicio de Facturación para la aplicación basada en microservicios. Detalla la estructura de la tabla `invoices`, la integración con el Servicio de Inventario, las políticas de Seguridad a Nivel de Fila (RLS) y las operaciones para crear, actualizar, consultar y eliminar facturas.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tabla de Contenidos
 
-## Description
+* [Visión General](#visión-general)
+* [Estructura de la Tabla Invoices](#estructura-de-la-tabla-invoices)
+* [Políticas de Seguridad a Nivel de Fila (RLS)](#políticas-de-seguridad-a-nivel-de-fila-rls)
+* [Integración con el Servicio de Inventario](#integración-con-el-servicio-de-inventario)
+* [Operaciones de Factura](#operaciones-de-factura)
+* [Manejo de Errores](#manejo-de-errores)
+* [Notas de Desarrollo](#notas-de-desarrollo)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Visión General
 
-## Project setup
+El Servicio de Facturación es un microservicio basado en NestJS encargado de la gestión de facturas. Se comunica con una base de datos Supabase e interactúa con el Servicio de Inventario a través de un cliente de microservicio (`ClientProxy`) para actualizar el stock cuando se crean, actualizan o eliminan facturas.
 
-```bash
-$ npm install
+## Estructura de la Tabla Invoices
+
+La tabla `invoices` en Supabase almacena la información de facturación:
+
+| Columna       | Tipo             | Descripción                                    | Restricciones               |
+| ------------- | ---------------- | ---------------------------------------------- | --------------------------- |
+| `id`          | SERIAL           | Identificador único de la factura              | Clave primaria              |
+| `customer_id` | INTEGER          | ID del cliente                                 | Clave foránea a `customers` |
+| `date`        | DATE             | Fecha de creación de la factura                | Default: CURRENT_DATE       |
+| `total`       | NUMERIC(10,2)    | Total de la factura                            | Debe ser >= 0               |
+| `status`      | `invoice_status` | Estado de la factura (`pending`, `paid`, etc.) | Default: 'pending'          |
+| `created_at`  | TIMESTAMP        | Fecha de creación                              | Default: CURRENT_TIMESTAMP  |
+| `updated_at`  | TIMESTAMP        | Fecha de última actualización                  | Default: CURRENT_TIMESTAMP  |
+| `service_id`  | VARCHAR(50)      | Identificador del servicio                     | Default: 'billing_service'  |
+
+La tabla tiene asociada `invoice_items`, que almacena los productos individuales y las cantidades incluidas en la factura.
+
+## Políticas de Seguridad a Nivel de Fila (RLS)
+
+RLS está habilitada en la tabla `invoices` y `invoice_items` para restringir el acceso al servicio de facturación:
+
+* **Políticas Principales**:
+
+```sql
+-- Para SELECT en invoices
+CREATE POLICY "Billing service can read invoices" ON invoices
+  FOR SELECT
+  TO authenticated
+  USING (service_id = 'billing_service');
+
+-- Para INSERT en invoices
+CREATE POLICY "Billing service can insert invoices" ON invoices
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (service_id = 'billing_service');
+
+-- Para UPDATE en invoices
+CREATE POLICY "Billing service can update invoices" ON invoices
+  FOR UPDATE
+  TO authenticated
+  USING (service_id = 'billing_service')
+  WITH CHECK (service_id = 'billing_service');
+
+-- Para DELETE en invoices
+CREATE POLICY "Billing service can delete invoices" ON invoices
+  FOR DELETE
+  TO authenticated
+  USING (service_id = 'billing_service');
+
+-- Policies para invoice_items
+CREATE POLICY "Billing service can manage invoice items" ON invoice_items
+  FOR ALL
+  TO authenticated
+  USING (service_id = 'billing_service')
+  WITH CHECK (service_id = 'billing_service');
 ```
 
-## Compile and run the project
+* **Propósito**: Permite solo al `Billing Service` (con `service_id = 'billing_service'`) realizar operaciones sobre facturas e ítems asociados. La clave de servicio de Supabase puede bypassar RLS si es necesario, pero las políticas aseguran integridad y aislamiento del microservicio.
 
-```bash
-# development
-$ npm run start
+## Integración con el Servicio de Inventario
 
-# watch mode
-$ npm run start:dev
+* El Servicio de Facturación utiliza `inventoryClient` (`ClientProxy`) para actualizar el stock de productos:
 
-# production mode
-$ npm run start:prod
+  * **Al crear una factura:** Resta las cantidades facturadas del stock.
+  * **Al actualizar una factura:** Ajusta el stock devolviendo las cantidades antiguas y restando las nuevas.
+  * **Al eliminar una factura:** Devuelve las cantidades de los productos al stock.
+
+## Operaciones de Factura
+
+### Crear Factura
+
+* **Entrada:** `customerId`, `invoiceItems` (array de `{product_id, quantity, unit_price}`), `total`.
+* **Proceso:**
+
+  1. Inserta la factura en la tabla `invoices`.
+  2. Inserta los ítems asociados en la tabla `invoice_items`.
+  3. Actualiza el stock a través del Servicio de Inventario.
+* **Salida:** Factura creada con sus ítems.
+
+### Consultar Factura
+
+* **Entrada:** `invoiceId`
+* **Salida:** Datos de la factura incluyendo `invoice_items`.
+
+### Consultar Todas las Facturas
+
+* **Salida:** Lista de todas las facturas con sus ítems asociados.
+
+### Actualizar Factura
+
+* **Entrada:** `invoiceId`, opcional: `customerId`, `total`, `status`, `invoiceItems`.
+* **Proceso:**
+
+  1. Actualiza la factura y los ítems asociados.
+  2. Ajusta el stock a través del Servicio de Inventario según los cambios.
+* **Salida:** Factura actualizada con sus ítems.
+
+### Eliminar Factura
+
+* **Entrada:** `invoiceId`
+* **Proceso:**
+
+  1. Elimina la factura de la base de datos.
+  2. Devuelve el stock de todos los ítems asociados.
+* **Salida:** Mensaje de éxito o error.
+
+## Manejo de Errores
+
+* Se generan errores descriptivos si falla la creación, actualización o eliminación de facturas.
+* Los errores de Supabase se registran detalladamente para depuración.
+* Estructura de respuesta estándar:
+
+```json
+{
+  "success": false,
+  "message": "Invoice with id 123 not found"
+}
 ```
 
-## Run tests
+## Notas de Desarrollo
 
-```bash
-# unit tests
-$ npm run test
+* **Requisitos Previos:** Node.js, CLI de NestJS, CLI de Supabase y dependencias (`@nestjs/microservices`, `@supabase/supabase-js`).
+* **Configuración:**
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+  1. Instalar dependencias: `npm install`
+  2. Configurar `.env` con `SUPABASE_URL` y `SUPABASE_KEY`.
+  3. Iniciar el servicio: `npm run start:dev`
+* **Pruebas:** Usar Postman para probar los endpoints de facturas con payloads JSON.
+* **Depuración:** Los logs proporcionan detalles de las operaciones en la base de datos y actualizaciones de stock.
