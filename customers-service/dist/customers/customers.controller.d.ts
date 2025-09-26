@@ -10,7 +10,15 @@ export declare class CustomersController {
     }): Promise<any>;
     getCustomer(data: {
         id: string;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     getAllCustomers(): Promise<any[]>;
     updateCustomer(data: {
         id: string;
@@ -18,10 +26,19 @@ export declare class CustomersController {
         email?: string;
         phone?: string;
         address?: string;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     deleteCustomer(data: {
         id: string;
     }): Promise<{
         success: boolean;
+        message: string;
     }>;
 }

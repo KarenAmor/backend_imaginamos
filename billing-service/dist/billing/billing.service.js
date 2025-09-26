@@ -62,7 +62,6 @@ let BillingService = class BillingService {
         this.inventoryClient = inventoryClient;
     }
     async createInvoice(customerId, invoiceItems, total) {
-        console.log('Processing createInvoice in BillingService:', { customerId, total, invoiceItems });
         try {
             const { data: invoiceData, error: invoiceError } = await supabase
                 .from('invoices')
@@ -103,7 +102,6 @@ let BillingService = class BillingService {
                 action: 'subtract',
                 products: invoiceItems.map(item => ({ id: item.product_id, quantity: item.quantity })),
             }).toPromise();
-            console.log('Invoice created successfully:', invoice);
             return { ...invoice, items: invoiceItems };
         }
         catch (error) {
@@ -121,9 +119,10 @@ let BillingService = class BillingService {
             .select('*, invoice_items(*)')
             .eq('id', id)
             .single();
-        if (invoiceError)
-            throw new Error(`Invoice not found: ${invoiceError.message}`);
-        return invoice;
+        if (invoiceError || !invoice) {
+            return { success: false, message: `Invoice with id ${id} not found` };
+        }
+        return { success: true, data: invoice };
     }
     async getAllInvoices() {
         const { data, error } = await supabase
@@ -139,8 +138,9 @@ let BillingService = class BillingService {
             .select('*, invoice_items(*)')
             .eq('id', id)
             .single();
-        if (fetchError)
-            throw new Error(`Failed to fetch invoice: ${fetchError.message}`);
+        if (fetchError || !oldInvoice) {
+            return { success: false, message: `Invoice with id ${id} not found` };
+        }
         const updateData = { customer_id: customerId, total, status, service_id: 'billing_service' };
         const { data: updatedInvoice, error: updateError } = await supabase
             .from('invoices')
@@ -180,18 +180,19 @@ let BillingService = class BillingService {
             .select('*, invoice_items(*)')
             .eq('id', id)
             .single();
-        if (fetchError)
-            throw new Error(`Failed to fetch invoice: ${fetchError.message}`);
+        if (fetchError || !invoice) {
+            return { success: false, message: `Invoice with id ${id} not found` };
+        }
         const { error } = await supabase.from('invoices').delete().eq('id', id);
-        if (error)
-            throw new Error(`Failed to delete invoice: ${error.message}`);
+        if (error) {
+            return { success: false, message: `Failed to delete invoice: ${error.message}` };
+        }
         if (invoice.invoice_items) {
             await this.inventoryClient.send('updateStock', {
                 action: 'add',
                 products: invoice.invoice_items.map(item => ({ id: item.product_id, quantity: item.quantity })),
             }).toPromise();
         }
-        return { success: true };
     }
 };
 exports.BillingService = BillingService;
@@ -200,12 +201,4 @@ exports.BillingService = BillingService = __decorate([
     __param(0, (0, common_2.Inject)('INVENTORY_SERVICE')),
     __metadata("design:paramtypes", [microservices_1.ClientProxy])
 ], BillingService);
-async function testSupabaseConnection() {
-    const { data, error } = await supabase.from('invoices').select('*').limit(1);
-    if (error)
-        console.error('Supabase connection test failed:', error);
-    else
-        console.log('Supabase connection test successful:', data);
-}
-testSupabaseConnection();
 //# sourceMappingURL=billing.service.js.map

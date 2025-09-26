@@ -10,7 +10,15 @@ export declare class SuppliersController {
     }): Promise<any>;
     getSupplier(data: {
         id: string;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     getAllSuppliers(): Promise<any[]>;
     updateSupplier(data: {
         id: string;
@@ -18,10 +26,19 @@ export declare class SuppliersController {
         contactName?: string;
         contactEmail?: string;
         contactPhone?: string;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     deleteSupplier(data: {
         id: string;
     }): Promise<{
         success: boolean;
+        message: string;
     }>;
 }

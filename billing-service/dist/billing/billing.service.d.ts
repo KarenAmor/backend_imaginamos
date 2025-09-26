@@ -7,7 +7,15 @@ export declare class BillingService {
         quantity: number;
         unit_price: number;
     }[], total: number): Promise<any>;
-    getInvoice(id: string): Promise<any>;
+    getInvoice(id: string): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     getAllInvoices(): Promise<any[]>;
     updateInvoice(id: string, customerId?: number, total?: number, status?: string, invoiceItems?: {
         product_id: number;
@@ -16,5 +24,6 @@ export declare class BillingService {
     }[]): Promise<any>;
     deleteInvoice(id: string): Promise<{
         success: boolean;
-    }>;
+        message: string;
+    } | undefined>;
 }

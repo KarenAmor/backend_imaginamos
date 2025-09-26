@@ -34,7 +34,6 @@ let InventoryController = class InventoryController {
         return this.inventoryService.deleteProduct(data.id);
     }
     async updateStock(data) {
-        console.log('Stock update received:', data);
         for (const product of data.products) {
             const delta = data.action === 'subtract' ? -product.quantity : product.quantity;
             await this.inventoryService.adjustStock(product.id.toString(), delta);

@@ -19,7 +19,6 @@ export class AuthController {
 
   @MessagePattern('login')
   async login(data: { email: string; password: string }) {
-    console.log('Received login request:', data);
     try {
       return await this.authService.login(data.email, data.password);
     } catch (error) {

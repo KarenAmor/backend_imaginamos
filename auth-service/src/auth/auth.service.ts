@@ -46,7 +46,6 @@ export class AuthService {
 
     // Solo se ejecuta si no hay error
     const token = this.jwtService.sign({ sub: data[0].id, email });
-    console.log('Registration successful, token generated');
     return { access_token: token };
   }
 

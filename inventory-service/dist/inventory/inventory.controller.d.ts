@@ -11,18 +11,35 @@ export declare class InventoryController {
     }): Promise<any>;
     get(data: {
         id: string;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     update(data: {
         id: string;
         name?: string;
         description?: string;
         price?: number;
         stock?: number;
-    }): Promise<any>;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        success: boolean;
+        data: any;
+        message?: undefined;
+    }>;
     delete(data: {
         id: string;
     }): Promise<{
         success: boolean;
+        message: string;
     }>;
     updateStock(data: {
         action: 'add' | 'subtract';

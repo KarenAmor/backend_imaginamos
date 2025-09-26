@@ -19,7 +19,6 @@ let BillingController = class BillingController {
         this.billingService = billingService;
     }
     async createInvoice(data) {
-        console.log('Received createInvoice request:', data);
         return this.billingService.createInvoice(data.customerId, data.invoiceItems, data.total);
     }
     async getInvoice(data) {

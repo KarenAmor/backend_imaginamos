@@ -27,8 +27,12 @@ export class CustomersService {
       .select('*')
       .eq('id', id)
       .single();
-    if (error) throw new Error(`Customer not found: ${error.message}`);
-    return data;
+
+    if (error || !data) {
+      return { success: false, message: `Customer with id ${id} not found` };
+    }
+
+    return { success: true, data };
   }
 
   async getAllCustomers() {
@@ -39,19 +43,39 @@ export class CustomersService {
     return data;
   }
 
-  async updateCustomer(id: string, name?: string, email?: string, phone?: string, address?: string) {
+ async updateCustomer(id: string, name?: string, email?: string, phone?: string, address?: string) {
     const { data, error } = await supabase
       .from('customers')
       .update({ name, email, phone, address, service_id: 'customers_service' })
       .eq('id', id)
       .select();
-    if (error) throw new Error(`Failed to update customer: ${error.message}`);
-    return data[0];
+
+    if (error || !data || data.length === 0) {
+      return { success: false, message: `Customer with id ${id} not found or failed to update` };
+    }
+
+    return { success: true, data: data[0] };
   }
 
   async deleteCustomer(id: string) {
+    // Primero verificamos si existe
+    const { data: existingCustomer, error: fetchError } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingCustomer) {
+      return { success: false, message: `Customer with id ${id} not found` };
+    }
+
     const { error } = await supabase.from('customers').delete().eq('id', id);
-    if (error) throw new Error(`Failed to delete customer: ${error.message}`);
-    return { success: true };
+
+    if (error) {
+      return { success: false, message: `Failed to delete customer: ${error.message}` };
+    }
+
+    return { success: true, message: `Customer with id ${id} deleted successfully` };
   }
+
 }

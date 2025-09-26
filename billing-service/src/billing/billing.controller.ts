@@ -8,7 +8,6 @@ export class BillingController {
 
   @MessagePattern('createInvoice')
   async createInvoice(data: { customerId: number; invoiceItems: { product_id: number; quantity: number; unit_price: number }[]; total: number }) {
-    console.log('Received createInvoice request:', data);
     return this.billingService.createInvoice(data.customerId, data.invoiceItems, data.total);
   }
 

@@ -34,7 +34,6 @@ export class InventoryController {
    //Nuevo handler para recibir los mensajes de BillingService
   @MessagePattern('updateStock')
 async updateStock(data: { action: 'add' | 'subtract'; products: { id: number; quantity: number }[] }) {
-  console.log('Stock update received:', data);
 
   for (const product of data.products) {
     const delta = data.action === 'subtract' ? -product.quantity : product.quantity;
