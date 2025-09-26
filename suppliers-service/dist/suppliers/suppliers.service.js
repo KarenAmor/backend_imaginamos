@@ -1,0 +1,112 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SuppliersService = void 0;
+const common_1 = require("@nestjs/common");
+const supabase_js_1 = require("@supabase/supabase-js");
+const dotenv = __importStar(require("dotenv"));
+dotenv.config();
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_KEY in .env file');
+}
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+let SuppliersService = class SuppliersService {
+    async createSupplier(name, contactEmail, contactName, contactPhone) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .insert({
+            name,
+            contact_name: contactName,
+            contact_email: contactEmail,
+            contact_phone: contactPhone,
+            service_id: 'suppliers_service'
+        })
+            .select();
+        if (error)
+            throw new Error(`Failed to create supplier: ${error.message}`);
+        return data[0];
+    }
+    async getSupplier(id) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error)
+            throw new Error(`Supplier not found: ${error.message}`);
+        return data;
+    }
+    async getAllSuppliers() {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .select('*');
+        if (error)
+            throw new Error(`Failed to retrieve suppliers: ${error.message}`);
+        return data;
+    }
+    async updateSupplier(id, name, contactName, contactEmail, contactPhone) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .update({
+            name,
+            contact_name: contactName,
+            contact_email: contactEmail,
+            contact_phone: contactPhone,
+            service_id: 'suppliers_service'
+        })
+            .eq('id', id)
+            .select();
+        if (error)
+            throw new Error(`Failed to update supplier: ${error.message}`);
+        return data[0];
+    }
+    async deleteSupplier(id) {
+        const { error } = await supabase.from('suppliers').delete().eq('id', id);
+        if (error)
+            throw new Error(`Failed to delete supplier: ${error.message}`);
+        return { success: true };
+    }
+};
+exports.SuppliersService = SuppliersService;
+exports.SuppliersService = SuppliersService = __decorate([
+    (0, common_1.Injectable)()
+], SuppliersService);
+//# sourceMappingURL=suppliers.service.js.map

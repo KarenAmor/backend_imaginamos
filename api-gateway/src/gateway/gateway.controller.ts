@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api') // Ruta base para evitar conflictos
 export class GatewayController {
-  constructor(private readonly gatewayService: GatewayService) {}
+  constructor(private readonly gatewayService: GatewayService) { }
 
   @Get('health')
   getHealth() {
@@ -101,6 +101,161 @@ export class GatewayController {
         error.message || 'Failed to delete product',
         error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Post('suppliers/create')
+  async createSupplier(
+    @Body() body: { name: string; contactName?: string; email: string; phone?: string },
+  ) {
+    try {
+      return await this.gatewayService.sendToSuppliers('createSupplier', body);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to create supplier',
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('suppliers/:id')
+  async getSupplier(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToSuppliers('getSupplier', { id });
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to get supplier',
+        error.statusCode || HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  @Get('suppliers')
+  async getAllSuppliers() {
+    try {
+      return await this.gatewayService.sendToSuppliers('getAllSuppliers', {});
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to retrieve suppliers',
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Put('suppliers/:id')
+  async updateSupplier(
+    @Param('id') id: string,
+    @Body() body: { name?: string; contactName?: string; email?: string; phone?: string },
+  ) {
+    try {
+      return await this.gatewayService.sendToSuppliers('updateSupplier', { id, ...body });
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to update supplier',
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Delete('suppliers/:id')
+  async deleteSupplier(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToSuppliers('deleteSupplier', { id });
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to delete supplier',
+        error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('billing/invoices')
+  async createInvoice(@Body() body: { customerId: number; invoiceItems: { product_id: number; quantity: number; unit_price: number }[]; total: number }) {
+    try {
+      return await this.gatewayService.sendToBilling('createInvoice', body);
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to create invoice', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('billing/invoices/:id')
+  async getInvoice(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToBilling('getInvoice', { id });
+    } catch (error) {
+      throw new HttpException(error.message || 'Invoice not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Get('billing/invoices')
+  async getAllInvoices() {
+    try {
+      return await this.gatewayService.sendToBilling('getAllInvoices', {});
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to retrieve invoices', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Put('billing/invoices/:id')
+  async updateInvoice(@Param('id') id: string, @Body() body: { customerId?: number; total?: number; status?: string; invoiceItems?: { product_id: number; quantity: number; unit_price: number }[] }) {
+    try {
+      return await this.gatewayService.sendToBilling('updateInvoice', { id, ...body });
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to update invoice', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Delete('billing/invoices/:id')
+  async deleteInvoice(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToBilling('deleteInvoice', { id });
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to delete invoice', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('customers/create')
+  async createCustomer(@Body() body: { name: string; email?: string; phone?: string; address?: string }) {
+    try {
+      return await this.gatewayService.sendToCustomers('createCustomer', body);
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to create customer', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('customers/:id')
+  async getCustomer(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToCustomers('getCustomer', { id });
+    } catch (error) {
+      throw new HttpException(error.message || 'Customer not found', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Get('customers')
+  async getAllCustomers() {
+    try {
+      return await this.gatewayService.sendToCustomers('getAllCustomers', {});
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to retrieve customers', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Put('customers/:id')
+  async updateCustomer(@Param('id') id: string, @Body() body: { name?: string; email?: string; phone?: string; address?: string }) {
+    try {
+      return await this.gatewayService.sendToCustomers('updateCustomer', { id, ...body });
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to update customer', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Delete('customers/:id')
+  async deleteCustomer(@Param('id') id: string) {
+    try {
+      return await this.gatewayService.sendToCustomers('deleteCustomer', { id });
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to delete customer', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

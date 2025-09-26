@@ -33,6 +33,14 @@ let InventoryController = class InventoryController {
     async delete(data) {
         return this.inventoryService.deleteProduct(data.id);
     }
+    async updateStock(data) {
+        console.log('Stock update received:', data);
+        for (const product of data.products) {
+            const delta = data.action === 'subtract' ? -product.quantity : product.quantity;
+            await this.inventoryService.adjustStock(product.id.toString(), delta);
+        }
+        return { success: true, action: data.action };
+    }
 };
 exports.InventoryController = InventoryController;
 __decorate([
@@ -65,6 +73,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], InventoryController.prototype, "delete", null);
+__decorate([
+    (0, microservices_1.MessagePattern)('updateStock'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], InventoryController.prototype, "updateStock", null);
 exports.InventoryController = InventoryController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [inventory_service_1.InventoryService])

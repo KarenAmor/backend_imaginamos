@@ -101,6 +101,24 @@ let InventoryService = class InventoryService {
             throw new Error(`Failed to delete product: ${error.message}`);
         return { success: true };
     }
+    async adjustStock(id, quantityDelta) {
+        const { data: product, error: fetchError } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('id', id)
+            .single();
+        if (fetchError)
+            throw new Error(`Product not found: ${fetchError.message}`);
+        const newStock = product.stock + quantityDelta;
+        const { data, error } = await supabase
+            .from('products')
+            .update({ stock: newStock, service_id: 'inventory_service' })
+            .eq('id', id)
+            .select();
+        if (error)
+            throw new Error(`Failed to update stock: ${error.message}`);
+        return data[0];
+    }
 };
 exports.InventoryService = InventoryService;
 exports.InventoryService = InventoryService = __decorate([

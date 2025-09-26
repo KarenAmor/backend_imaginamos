@@ -7,12 +7,15 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject('AUTH_SERVICE') private authClient: ClientProxy,
     @Inject('INVENTORY_SERVICE') private inventoryClient: ClientProxy,
-  ) {}
+    @Inject('SUPPLIERS_SERVICE') private suppliersClient: ClientProxy,
+    @Inject('BILLING_SERVICE') private billingClient: ClientProxy,
+    @Inject('CUSTOMERS_SERVICE') private customersClient: ClientProxy,
+  ) { }
 
   async onModuleInit() {
     try {
       await this.connectClients();
-      console.log('GatewayService initialized, connected to Auth Service and Inventory Service');
+      console.log('GatewayService initialized, connected to Auth Service, Inventory Service, Suppliers Service, and Billing Service');
     } catch (error) {
       console.error(`Failed to connect to microservices: ${error.message}`);
       throw new RpcException(`Gateway initialization failed: ${error.message}`);
@@ -22,11 +25,18 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     await this.authClient.close();
     await this.inventoryClient.close();
+    await this.suppliersClient.close();
+    await this.billingClient.close();
     console.log('GatewayService connections closed');
   }
 
   private async connectClients() {
-    const connectPromises = [this.authClient.connect(), this.inventoryClient.connect()];
+    const connectPromises = [
+      this.authClient.connect(),
+      this.inventoryClient.connect(),
+      this.suppliersClient.connect(),
+      this.billingClient.connect(),
+    ];
     await Promise.all(connectPromises);
   }
 
@@ -71,6 +81,56 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
       throw new RpcException({
         statusCode: 503, // Service Unavailable
         message: `Failed to communicate with Inventory Service: ${error.message}`,
+      });
+    }
+  }
+
+  async sendToSuppliers(pattern: string, data: any) {
+    try {
+      const response = await this.suppliersClient.send(pattern, data).toPromise();
+      console.log(`Successfully sent to Suppliers Service: ${pattern}`);
+      return response;
+    } catch (error) {
+      console.error(`Error sending to Suppliers Service: ${error.message}`);
+      if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        await this.reconnectClient(this.suppliersClient);
+      }
+      throw new RpcException({
+        statusCode: 503,
+        message: `Failed to communicate with Suppliers Service: ${error.message}`,
+      });
+    }
+  }
+
+  async sendToBilling(pattern: string, data: any) {
+    try {
+      const response = await this.billingClient.send(pattern, data).toPromise();
+      console.log(`Successfully sent to Billing Service: ${pattern}`);
+      return response;
+    } catch (error) {
+      console.error(`Error sending to Billing Service: ${error.message}`);
+      if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        await this.reconnectClient(this.billingClient);
+      }
+      throw new RpcException({
+        statusCode: 503, // Service Unavailable
+        message: `Failed to communicate with Billing Service: ${error.message}`,
+      });
+    }
+  }
+  async sendToCustomers(pattern: string, data: any) {
+    try {
+      const response = await this.customersClient.send(pattern, data).toPromise();
+      console.log(`Successfully sent to Customers Service: ${pattern}`);
+      return response;
+    } catch (error) {
+      console.error(`Error sending to Customers Service: ${error.message}`);
+      if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        await this.reconnectClient(this.customersClient);
+      }
+      throw new RpcException({
+        statusCode: 503,
+        message: `Failed to communicate with Customers Service: ${error.message}`,
       });
     }
   }

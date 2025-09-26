@@ -24,4 +24,14 @@ export declare class InventoryController {
     }): Promise<{
         success: boolean;
     }>;
+    updateStock(data: {
+        action: 'add' | 'subtract';
+        products: {
+            id: number;
+            quantity: number;
+        }[];
+    }): Promise<{
+        success: boolean;
+        action: "add" | "subtract";
+    }>;
 }

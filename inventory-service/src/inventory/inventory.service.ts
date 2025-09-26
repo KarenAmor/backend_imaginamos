@@ -13,22 +13,22 @@ const logger = new Logger('InventoryService');
 
 @Injectable()
 export class InventoryService {
- async createProduct(name: string, description: string, price: number, stock: number) {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .insert({ name, description, price, stock, service_id: 'inventory_service' })
-      .select();
-    if (error) {
-      console.error('Supabase insert error:', error);
-      throw new Error(`Failed to create product: ${error.message} (Details: ${JSON.stringify(error)})`);
+  async createProduct(name: string, description: string, price: number, stock: number) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .insert({ name, description, price, stock, service_id: 'inventory_service' })
+        .select();
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(`Failed to create product: ${error.message} (Details: ${JSON.stringify(error)})`);
+      }
+      return data[0];
+    } catch (error) {
+      console.error('Create product failed:', error);
+      throw error;
     }
-    return data[0];
-  } catch (error) {
-    console.error('Create product failed:', error);
-    throw error;
   }
-}
 
   async getProduct(id: string) {
     const { data, error } = await supabase
@@ -63,4 +63,28 @@ export class InventoryService {
     if (error) throw new Error(`Failed to delete product: ${error.message}`);
     return { success: true };
   }
+
+  async adjustStock(id: string, quantityDelta: number) {
+    // 1. Traer el producto actual
+    const { data: product, error: fetchError } = await supabase
+      .from('products')
+      .select('stock')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) throw new Error(`Product not found: ${fetchError.message}`);
+
+    const newStock = product.stock + quantityDelta;
+
+    // 2. Actualizar solo el campo stock
+    const { data, error } = await supabase
+      .from('products')
+      .update({ stock: newStock, service_id: 'inventory_service' })
+      .eq('id', id)
+      .select();
+
+    if (error) throw new Error(`Failed to update stock: ${error.message}`);
+    return data[0];
+  }
+
 }

@@ -6,4 +6,5 @@ export declare class InventoryService {
     deleteProduct(id: string): Promise<{
         success: boolean;
     }>;
+    adjustStock(id: string, quantityDelta: number): Promise<any>;
 }
