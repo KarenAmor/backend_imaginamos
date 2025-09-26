@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - billing-service
+      - customers-service
+      - inventory-service
+      - suppliers-service
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "3001:3000"
+
+  billing-service:
+    build: ./billing-service
+    ports:
+      - "3004:3000"
+
+  customers-service:
+    build: ./customers-service
+    ports:
+      - "3005:3000"
+
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - "3002:3000"
+
+  suppliers-service:
+    build: ./suppliers-service
+    ports:
+      - "3003:3000"

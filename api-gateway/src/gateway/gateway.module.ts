@@ -3,33 +3,33 @@ import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtStrategy } from './jwt.strategy';
-import { PassportModule } from '@nestjs/passport';
-
-@Module({
+import { PassportModule } from '@nestjs/passport';@Module({
   imports: [
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 3001 },
+        options: { host: 'auth-service', port: 3001 },
       },
       {
         name: 'INVENTORY_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 3002 },
+        options: { host: 'inventory-service', port: 3002 },
       },
       {
         name: 'SUPPLIERS_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 3003 },
+        options: { host: 'suppliers-service', port: 3003,  retryAttempts: 5, retryDelay: 3000, },
       },
-      { name: 'BILLING_SERVICE', 
-        transport: Transport.TCP, 
-        options: { host: 'localhost', port: 3004 } 
+      {
+        name: 'BILLING_SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'billing-service', port: 3004 },
       },
-      { name: 'CUSTOMERS_SERVICE', 
-        transport: Transport.TCP, 
-        options: { host: 'localhost', port: 3005 } 
+      {
+        name: 'CUSTOMERS_SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'customers-service', port: 3005 },
       },
     ]),
     PassportModule,
@@ -37,4 +37,4 @@ import { PassportModule } from '@nestjs/passport';
   controllers: [GatewayController],
   providers: [GatewayService, JwtStrategy],
 })
-export class GatewayModule { }
+export class GatewayModule {}
