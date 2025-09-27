@@ -16,7 +16,8 @@ Este proyecto consiste en varios microservicios (`auth`, `billing`, `customers`,
 
    ```bash
    cd C:\Users\krnmo\Documents\imaginamos
-````
+   usa la ruta de tu computadora
+   ```
 
 2. Construir y levantar todos los servicios:
 
@@ -65,5 +66,3 @@ docker compose down
 
 * La **API Gateway** se conecta a los microservicios usando los nombres de servicio definidos en `docker-compose.yml` (`auth-service`, `billing-service`, etc.), evitando problemas de IP.
 * Si cambias puertos en algún microservicio, asegúrate de actualizar también en el **GatewayModule**.
-
-```
