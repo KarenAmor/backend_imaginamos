@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice(BillingModule, {
     transport: Transport.TCP,
     options: {
-      host: 'localhost',
+      host: '0.0.0.0',
       port: 3004, // Puerto único para Billing Service
     },
   });

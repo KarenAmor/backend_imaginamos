@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice(SuppliersModule, {
     transport: Transport.TCP,
     options: {
-      host: 'localhost',
+      host: '0.0.0.0',
       port: 3003, // Puerto diferente al de Inventory (3002)
     },
   });
