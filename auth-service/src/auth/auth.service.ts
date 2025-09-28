@@ -41,10 +41,9 @@ export class AuthService {
       if (error.code === '23505') { // Duplicado
         throw new BadRequestException('Email already registered');
       }
-      throw new BadRequestException(error.message); // Otros errores como 400 para consistencia
+      throw new BadRequestException(error.message); 
     }
 
-    // Solo se ejecuta si no hay error
     const token = this.jwtService.sign({ sub: data[0].id, email });
     return { access_token: token };
   }

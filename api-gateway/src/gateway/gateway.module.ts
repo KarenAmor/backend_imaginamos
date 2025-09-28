@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { GatewayController } from './gateway.controller';
 import { GatewayService } from './gateway.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';@Module({
   imports: [
+    ConfigModule.forRoot(),
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',
@@ -19,7 +21,7 @@ import { PassportModule } from '@nestjs/passport';@Module({
       {
         name: 'SUPPLIERS_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'suppliers-service', port: 3003,  retryAttempts: 5, retryDelay: 3000, },
+        options: { host: 'suppliers-service', port: 3003 },
       },
       {
         name: 'BILLING_SERVICE',

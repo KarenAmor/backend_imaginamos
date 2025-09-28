@@ -15,8 +15,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message || message;
     } else if (exception instanceof RpcException) {
       const rpcError = exception.getError();
-      status = (rpcError as any)?.statusCode || status; // Accede al statusCode del RpcException
-      message = (rpcError as any)?.message || message; // Accede al message del RpcException
+      status = (rpcError as any)?.statusCode || status; 
+      message = (rpcError as any)?.message || message; 
     } else if (exception instanceof Error) {
       message = exception.message || message;
     } else if (typeof exception === 'string') {

@@ -42,6 +42,7 @@ export class GatewayController {
   }
 
   @Post('inventory/create')
+  @UseGuards(AuthGuard('jwt'))
   async createProduct(@Body() body: { name: string; description: string; price: number; stock: number }) {
     try {
       return await this.gatewayService.sendToInventory('createProduct', body);
@@ -54,6 +55,7 @@ export class GatewayController {
   }
 
   @Get('inventory/:id')
+  @UseGuards(AuthGuard('jwt'))
   async getProduct(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToInventory('getProduct', { id });
@@ -66,6 +68,7 @@ export class GatewayController {
   }
 
   @Get('inventory')
+  @UseGuards(AuthGuard('jwt'))
   async getAllProducts() {
     try {
       return await this.gatewayService.sendToInventory('getAllProducts', {});
@@ -78,6 +81,7 @@ export class GatewayController {
   }
 
   @Put('inventory/:id')
+  @UseGuards(AuthGuard('jwt'))
   async updateProduct(
     @Param('id') id: string,
     @Body() body: { name?: string; description?: string; price?: number; stock?: number },
@@ -93,6 +97,7 @@ export class GatewayController {
   }
 
   @Delete('inventory/:id')
+  @UseGuards(AuthGuard('jwt'))
   async deleteProduct(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToInventory('deleteProduct', { id });
@@ -105,6 +110,7 @@ export class GatewayController {
   }
 
   @Post('suppliers/create')
+  @UseGuards(AuthGuard('jwt'))
   async createSupplier(
     @Body() body: { name: string; contactName?: string; email: string; phone?: string },
   ) {
@@ -119,6 +125,7 @@ export class GatewayController {
   }
 
   @Get('suppliers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async getSupplier(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToSuppliers('getSupplier', { id });
@@ -131,6 +138,7 @@ export class GatewayController {
   }
 
   @Get('suppliers')
+  @UseGuards(AuthGuard('jwt'))
   async getAllSuppliers() {
     try {
       return await this.gatewayService.sendToSuppliers('getAllSuppliers', {});
@@ -143,6 +151,7 @@ export class GatewayController {
   }
 
   @Put('suppliers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async updateSupplier(
     @Param('id') id: string,
     @Body() body: { name?: string; contactName?: string; email?: string; phone?: string },
@@ -158,6 +167,7 @@ export class GatewayController {
   }
 
   @Delete('suppliers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async deleteSupplier(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToSuppliers('deleteSupplier', { id });
@@ -170,6 +180,7 @@ export class GatewayController {
   }
 
   @Post('billing/invoices')
+  @UseGuards(AuthGuard('jwt'))
   async createInvoice(@Body() body: { customerId: number; invoiceItems: { product_id: number; quantity: number; unit_price: number }[]; total: number }) {
     try {
       return await this.gatewayService.sendToBilling('createInvoice', body);
@@ -179,6 +190,7 @@ export class GatewayController {
   }
 
   @Get('billing/invoices/:id')
+  @UseGuards(AuthGuard('jwt'))
   async getInvoice(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToBilling('getInvoice', { id });
@@ -188,6 +200,7 @@ export class GatewayController {
   }
 
   @Get('billing/invoices')
+  @UseGuards(AuthGuard('jwt'))
   async getAllInvoices() {
     try {
       return await this.gatewayService.sendToBilling('getAllInvoices', {});
@@ -197,6 +210,7 @@ export class GatewayController {
   }
 
   @Put('billing/invoices/:id')
+  @UseGuards(AuthGuard('jwt'))
   async updateInvoice(@Param('id') id: string, @Body() body: { customerId?: number; total?: number; status?: string; invoiceItems?: { product_id: number; quantity: number; unit_price: number }[] }) {
     try {
       return await this.gatewayService.sendToBilling('updateInvoice', { id, ...body });
@@ -206,6 +220,7 @@ export class GatewayController {
   }
 
   @Delete('billing/invoices/:id')
+  @UseGuards(AuthGuard('jwt'))
   async deleteInvoice(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToBilling('deleteInvoice', { id });
@@ -215,6 +230,7 @@ export class GatewayController {
   }
 
   @Post('customers/create')
+  @UseGuards(AuthGuard('jwt'))
   async createCustomer(@Body() body: { name: string; email?: string; phone?: string; address?: string }) {
     try {
       return await this.gatewayService.sendToCustomers('createCustomer', body);
@@ -224,6 +240,7 @@ export class GatewayController {
   }
 
   @Get('customers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async getCustomer(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToCustomers('getCustomer', { id });
@@ -233,6 +250,7 @@ export class GatewayController {
   }
 
   @Get('customers')
+  @UseGuards(AuthGuard('jwt'))
   async getAllCustomers() {
     try {
       return await this.gatewayService.sendToCustomers('getAllCustomers', {});
@@ -242,6 +260,7 @@ export class GatewayController {
   }
 
   @Put('customers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async updateCustomer(@Param('id') id: string, @Body() body: { name?: string; email?: string; phone?: string; address?: string }) {
     try {
       return await this.gatewayService.sendToCustomers('updateCustomer', { id, ...body });
@@ -251,6 +270,7 @@ export class GatewayController {
   }
 
   @Delete('customers/:id')
+  @UseGuards(AuthGuard('jwt'))
   async deleteCustomer(@Param('id') id: string) {
     try {
       return await this.gatewayService.sendToCustomers('deleteCustomer', { id });

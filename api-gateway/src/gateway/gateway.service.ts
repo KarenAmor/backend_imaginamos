@@ -62,7 +62,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         await this.reconnectClient(this.authClient);
       }
       throw new RpcException({
-        statusCode: 503, // Service Unavailable
+        statusCode: 503, 
         message: `Failed to communicate with Auth Service: ${error.message}`,
       });
     }
@@ -79,7 +79,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         await this.reconnectClient(this.inventoryClient);
       }
       throw new RpcException({
-        statusCode: 503, // Service Unavailable
+        statusCode: 503, 
         message: `Failed to communicate with Inventory Service: ${error.message}`,
       });
     }
@@ -113,7 +113,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         await this.reconnectClient(this.billingClient);
       }
       throw new RpcException({
-        statusCode: 503, // Service Unavailable
+        statusCode: 503, 
         message: `Failed to communicate with Billing Service: ${error.message}`,
       });
     }

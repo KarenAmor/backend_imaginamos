@@ -13,7 +13,7 @@ export class AuthController {
       return await this.authService.register(data.email, data.password);
     } catch (error) {
       console.error('Error in register handler:', error.message);
-      throw error; // Propaga el RpcException al cliente
+      throw error; 
     }
   }
 

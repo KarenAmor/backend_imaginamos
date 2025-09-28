@@ -11,7 +11,7 @@ import { BillingController } from './billing.controller';
         transport: Transport.TCP,
         options: {
           host: 'localhost',
-          port: 3002, // Puerto del Inventory Service
+          port: 3002, 
         },
       },
     ]),

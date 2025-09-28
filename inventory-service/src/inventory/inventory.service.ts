@@ -49,7 +49,7 @@ export class InventoryService {
       .from('products')
       .select('*');
     if (error) throw new Error(`Failed to retrieve products: ${error.message}`);
-    return data; // Retorna la lista completa de productos
+    return data; 
   }
 
   async updateProduct(id: string, name?: string, description?: string, price?: number, stock?: number) {
